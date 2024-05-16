@@ -53,6 +53,14 @@ docker logs ws1
 docker logs ws2
 docker logs gg1
 
+################################################# avec docker-compose #################################################
+###################################### les images sont construites comme avant ########################################
+docker-compose up --scale ws=3 --scale gg=2
+#ordre aléatoire
+docker exec exempleannuairemotsmeles-ws-2 bash -c "kill $(pidof java)"
+docker exec exempleannuairemotsmeles-ws-1 bash -c "kill $(pidof java)"
+docker exec exempleannuairemotsmeles-ws-3 bash -c "kill $(pidof java)"
+docker-compose stop 
 ```
 
 
@@ -72,7 +80,11 @@ docker logs gg1
   - pour l'utilisation de docker avec host.docker.internal il faut l'option "--add-host=host.docker.internal:host-gateway" car c'est sur linux
   - il y a des commandes exécutées dans un des containers docker pour simuler l'arrêt d'un service
   - le pipeline s'arrête car les containers docker sont lancés en tâche de fond (les stops ne sont pas nécessaires)
-
+- tag dockercompose : il y a un docker compose qui permet de tout lancer d'un coup
+  - le compose est lancé (pas en fond), il bloque,
+  - mais un script est lancé en tâche de fond, qui fait un "sleep" puis qui arrête le compose
+  - l'ordre pour "tuer" les words-services est complétement arbitraire 
+  - les docker-compose up ou stop fonctionne avec le fichier yml qui est là où la commande est lancée
 
 ## Annuaire en composant 
 

@@ -80,3 +80,38 @@ jobs:
           docker stop gg1
           docker stop -t 0 ws2
           docker stop -t 0 annuaire8123
+
+  docker-compose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+      - name: Cache local Maven repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      - name: Build with Maven and docker
+        run: |
+          mvn clean install -DskipTests
+          docker build -t gg:annuaire annuaire
+          docker build -t gg:words words-service
+          docker build -t gg:gg generateurgrille
+      - name: create docker container
+        run: |
+          docker create --name annuaire8123 -p 8123:8123  -e PORT=8123 gg:annuaire
+          docker create --name ws1 -p 8222:8222  -e IP_ANNUAIRE="http://host.docker.internal:8123/"  -e PORT=8222 --add-host=host.docker.internal:host-gateway gg:words
+          docker create --name ws2 -p 8244:8244  -e IP_ANNUAIRE="http://host.docker.internal:8123/"  -e PORT=8244 --add-host=host.docker.internal:host-gateway gg:words
+          docker create --name gg1 -p 8333:8333  -e IP_ANNUAIRE="http://host.docker.internal:8123/" -e PORT=8333 --add-host=host.docker.internal:host-gateway gg:gg
+      - name: exec in docker compose
+        run: |
+          chmod u+x scripts/stopcompose.sh
+          scripts/stopcompose.sh &
+          docker-compose up --scale ws=3 --scale gg=2
