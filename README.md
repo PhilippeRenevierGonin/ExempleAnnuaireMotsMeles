@@ -34,6 +34,7 @@ mvn spring-boot:run -Dspring-boot.run.jvmArguments='-Dserver.port=9999' -Dspring
     - un exemple de test avec des appels à des services extérieurs simulés avec MockWebServer : RequeteVersAbonnesImplTest
     - un exemple de test de sa propre API (avec mockmvc) dans AnnuaireControlleurWebTest
     - un exemple de test "scenario", ou tout le service est testé, mais l'extérieur est simulé (c.f. les deux tests précédents)
+- tag ciinit : mise en place de la githubaction
 
 
 
