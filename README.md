@@ -22,6 +22,37 @@ mvn spring-boot:run -Dspring-boot.run.jvmArguments='-Dserver.port=8275' -Dspring
 mvn spring-boot:run -Dspring-boot.run.jvmArguments='-Dserver.port=8888' -Dspring-boot.run.arguments='http://localhost:8123/' -pl generateurgrille
 mvn spring-boot:run -Dspring-boot.run.jvmArguments='-Dserver.port=9999' -Dspring-boot.run.arguments='http://localhost:8123/' -pl generateurgrille
 
+################################################# avec docker #################################################
+#construire les images docker 
+docker build -t gg:annuaire annuaire
+docker build -t gg:words words-service
+docker build -t gg:gg generateurgrille
+
+#construire les container
+docker create --name annuaire8123 -p 8123:8123  -e PORT=8123 gg:annuaire
+docker create --name ws1 -p 8222:8222  -e IP_ANNUAIRE="http://host.docker.internal:8123/"  -e PORT=8222 gg:words
+docker create --name ws2 -p 8244:8244  -e IP_ANNUAIRE="http://host.docker.internal:8123/"  -e PORT=8244 gg:words
+docker create --name gg1 -p 8333:8333  -e IP_ANNUAIRE="http://host.docker.internal:8123/" -e PORT=8333 gg:gg
+# avec --add-host=host.docker.internal:host-gateway pour linux pour les host.docker.internal
+
+#lancement en daemon
+docker start annuaire8123
+docker start ws1
+docker start gg1
+
+#pour arreter le service dans ws1 (et le container par consequence)
+# docker exec ws1 pidof java 
+# docker exec ws1 bash -c "kill 7"
+docker exec ws1 bash -c "kill $(pidof java)"
+
+docker stop -t 0 gg1
+docker stop -t 0 annuaire8123
+
+docker logs annuaire8123
+docker logs ws1
+docker logs ws2
+docker logs gg1
+
 ```
 
 
@@ -35,7 +66,12 @@ mvn spring-boot:run -Dspring-boot.run.jvmArguments='-Dserver.port=9999' -Dspring
     - un exemple de test de sa propre API (avec mockmvc) dans AnnuaireControlleurWebTest
     - un exemple de test "scenario", ou tout le service est testé, mais l'extérieur est simulé (c.f. les deux tests précédents)
 - tag ciinit : mise en place de la githubaction
-
+- tag dockerfile : les Dockerfile, utilisables avec le binding de port, si les services s'enregistrent bien avec des IP qui ne sont pas "localhost"
+  - pour l'exécution de docker dans github action : les containers sont lancés en tâche de fond (daemon),
+  - il y a des "sleep" pour laisser le temps d'exécution (c'est probablement plus lent sur la VM de github qu'en local)
+  - pour l'utilisation de docker avec host.docker.internal il faut l'option "--add-host=host.docker.internal:host-gateway" car c'est sur linux
+  - il y a des commandes exécutées dans un des containers docker pour simuler l'arrêt d'un service
+  - le pipeline s'arrête car les containers docker sont lancés en tâche de fond (les stops ne sont pas nécessaires)
 
 
 ## Annuaire en composant 
