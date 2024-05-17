@@ -61,6 +61,23 @@ docker exec exempleannuairemotsmeles-ws-2 bash -c "kill $(pidof java)"
 docker exec exempleannuairemotsmeles-ws-1 bash -c "kill $(pidof java)"
 docker exec exempleannuairemotsmeles-ws-3 bash -c "kill $(pidof java)"
 docker-compose stop 
+
+################################################## pour la page web ##################################################
+cd front
+npm install
+node server.js
+
+############################################ pour la page web dans docker ############################################
+#depuis la racine du projet
+docker build -t gg:front front
+docker create --name front80 -p 80:80  -e URL_GENERATEUR="http://localhost:8888"  gg:front
+docker start front80
+
+# ou avec docker-compose (on est dans ./front)
+cd front
+docker-compose  -f docker-compose-withui.yml up
+# l'accès se fait sur http://localhost dans les deux cas
+
 ```
 
 
@@ -85,6 +102,9 @@ docker-compose stop
   - mais un script est lancé en tâche de fond, qui fait un "sleep" puis qui arrête le compose
   - l'ordre pour "tuer" les words-services est complétement arbitraire 
   - les docker-compose up ou stop fonctionne avec le fichier yml qui est là où la commande est lancée
+- tag ui : il y a une page web (hébergée sur un serveur node) qui demande à un générateur de grille une grille pour l'afficher
+  - il y a un docker dans ./front et un docker-compose spécifique
+  - la page est accessible par un binding de port sur localhost de la machine hôte (sinon, il faut des configurations réseaux complexes...)
 
 ## Annuaire en composant 
 

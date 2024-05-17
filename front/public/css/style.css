@@ -1,0 +1,72 @@
+nav {
+    margin-bottom: 1rem;
+}
+
+h1 {
+	font-size: 2rem;
+	text-align: center;
+	border-bottom: gray thin solid;
+	padding: 0;
+	mardin: 0;
+}
+
+div#motsmeles {
+    font-family: "Courier New", monospace;
+}
+
+div#motsmeles > div > span {
+    display: inline-block;
+    padding: 0.5rem;
+    border: black thin solid;
+    width: 1rem;
+    height: 1rem;
+    text-align: center;
+    font-weight: bold;
+
+    -webkit-user-select: none; /* Chrome all / Safari all */
+    -moz-user-select: none; /* Firefox all */
+    -ms-user-select: none;
+    user-select: none;
+}
+
+div#motsmeles > div > span:nth-child(n+2) {
+    border-left-style: none;
+}
+
+div#motsmeles > div:nth-child(n+2) > span {
+    border-top-style: none;
+}
+
+div#motsmeles > div > span.selected {
+    background: yellow;
+}
+
+div#motsmeles > div > span.trouve {
+    text-decoration: line-through;
+    color: gray;
+    font-weight: normal;
+}
+
+aside {
+    border-bottom : black thin solid;
+    position: fixed;
+    top: 7rem;
+    right: 0;
+	left:60%;
+    padding: 0.5em;
+}
+aside + aside {
+    top: 9.4rem;
+	bottom: 0;
+	right: 0%;
+	left:60%;
+	overflow: auto;
+}
+
+aside + aside ul {
+	display: flex;
+	flex-direction: column;
+	flex-wrap: wrap;
+	height:  calc(100% - 3.4em );
+	
+}

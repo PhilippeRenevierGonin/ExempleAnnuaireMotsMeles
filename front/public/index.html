@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8"/>
+    <title>mots mélés ou presque</title>
+
+    <link rel="stylesheet" href="css/style.css" type="text/css" />
+
+    <script type="text/javascript" src="PAC/Pac.js"></script>
+    <script type="text/javascript" src="PAC/Grille.js"></script>
+    <script type="text/javascript" src="PAC/Ciment.js"></script>
+    <script type="text/javascript" src="PAC/ListeMots.js"></script>
+
+    <script type="text/javascript">
+
+        function recupererGrille(url, grilleId) {
+            console.dir(grilleId);
+            fetch(url+"/grille/"+grilleId)
+                    .then((response) => {
+                        console.dir(response);
+                        if (response.status == 206) {
+                            console.log("pas pret "+grilleId);
+                            setTimeout("recupererGrille('"+url+"','"+grilleId+"');", 1000);
+                        }
+                        else if (response.status == 200) {
+                            console.log("******* ok "+grilleId);
+                            response.json().then(grille => {
+                                console.dir(grille);  
+                                initGrille(grille);  
+                            });
+                        }
+                        
+                    })
+        }
+		
+		
+		
+
+
+        function initGrille(grille) {
+            let absGrille = new AbsGrille();
+            let presGrille = new PresGrille();
+            let ctrlGrille = new CtrlGrille(absGrille, presGrille);
+
+            let absCiment = new AbsCiment();
+            let presCiment = new PresCiment();
+            let ctrlCiment = new CtrlCiment(absCiment, presCiment);
+
+            let absListe = new AbsListeMots();
+            let presListe = new PresListeMots();
+            let ctrlListe = new CtrlListeMots(absListe, presListe);
+
+            ctrlCiment.addEnfant(ctrlGrille);
+            ctrlCiment.addEnfant(ctrlListe);
+            ctrlCiment.init(grille);
+        }
+
+
+		function charger(url) {		
+			// on vide
+			let hr = document.querySelector("hr");
+			if (hr.parentElement === document.body) while(hr.nextSibling != null) {
+				document.body.removeChild(hr.nextSibling)
+			}
+			// on fait la requête
+			fetch(url + "/grille/nouvelle?langue=fr&longueur=25&hauteur=25&nbEchecMax=1000")
+                .then((response) => 
+						{
+						console.dir(response);
+                        if (response.status == 200) {
+                            // console.dir(response.text()); 
+                            response.text().then(uuid => {
+                                console.dir(uuid);  
+                                recupererGrille(url, uuid);  
+                            });
+                        }
+						});
+
+        }
+
+        window.addEventListener("DOMContentLoaded", () => {
+            fetch("url.txt").then( (response) => {
+                if (response.status == 200) {
+                    response.text().then(url => document.querySelector("input").value=url);
+                }
+            });
+        });
+
+    </script>
+
+
+</head>
+<body>
+<h1>Grille Carrée</h1>
+url du service sans le /  : <input placeholder="http://localhost:8081" value="http://localhost:8081" /><button onclick="charger(this.previousElementSibling.value)">charger la grille 25x25 en fr</button>
+<hr/>
+</body>
+</html>

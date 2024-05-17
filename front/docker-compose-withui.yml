@@ -1,0 +1,53 @@
+services:
+
+
+  annuaire:
+    image: gg:annuaire
+    container_name: serveur
+    environment:
+      - PORT=80
+    networks:
+      gg_net:
+        ipv4_address: 172.98.16.253
+
+
+  ws:
+    image: gg:words
+    # container_name: client
+    environment:
+      - IP_ANNUAIRE=http://172.98.16.253:80/
+      - PORT=80
+    networks:
+      gg_net:
+      #  ipv4_address: 172.28.0.3
+
+  gg:
+    image: gg:gg
+    # container_name: client
+    environment:
+      - IP_ANNUAIRE=http://172.98.16.253:80/
+      - PORT=8080
+    ports:
+      - 8080:8080
+    networks:
+      gg_net:
+       ipv4_address: 172.98.24.12
+
+  ui:
+    image: gg:front
+    # container_name: client
+    ports:
+      - 80:80
+    environment:
+      - URL_GENERATEUR=http://localhost:8080
+    networks:
+      gg_net:
+
+
+
+networks:
+  gg_net:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.98.0.0/16
