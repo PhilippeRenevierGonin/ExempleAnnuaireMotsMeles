@@ -3,7 +3,6 @@ services:
 
   annuaire:
     image: gg:annuaire
-    container_name: serveur
     environment:
       - PORT=80
     networks:
