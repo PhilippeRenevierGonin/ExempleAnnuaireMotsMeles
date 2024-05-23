@@ -1,5 +1,7 @@
 package fr.uca.prg.annuaire.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.uca.prg.verification.Identification;
 import io.swagger.v3.oas.models.OpenAPI;
 import org.springframework.stereotype.Service;
@@ -15,6 +17,13 @@ public class ServiceEnregistrementImpl implements ServiceEnregistrement {
     @Override
     public boolean enregistrerNouveauService(Identification nouveauService) {
         System.out.println("─────────────> enregistrerNouveauService "+nouveauService);
+        ObjectMapper mapper = new ObjectMapper();
+        System.out.println("─────────────> "+nouveauService.getUrl());
+        try {
+            System.out.println("─────────────> "+mapper.writeValueAsString(nouveauService.getContrat()));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
         boolean accepte = ! services.containsKey(nouveauService.getUrl());
         if (accepte) {
             services.put(nouveauService.getUrl(), nouveauService.getContrat());
