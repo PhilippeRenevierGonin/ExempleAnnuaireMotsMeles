@@ -12,8 +12,9 @@ le principe : les "générateurs de grille" recherchent des "words-service" en p
 
 
 ```
-################################################# avec maven #################################################
-########### sous windows, il ne faut pas taper ceci dans powsershell (configurer vscode et intellij ##########
+###################################################### avec maven ######################################################
+################ sous windows, il ne faut pas taper ceci dans powsershell (configurer vscode et intellij ###############
+###################### sous windows, dans le terminal, utilisez "chcp 65001" pour passer en utf-8 ######################
 
 mvn clean install
 mvn spring-boot:run -Dspring-boot.run.jvmArguments='-Dserver.port=8123'  -pl annuaire
@@ -22,7 +23,7 @@ mvn spring-boot:run -Dspring-boot.run.jvmArguments='-Dserver.port=8275' -Dspring
 mvn spring-boot:run -Dspring-boot.run.jvmArguments='-Dserver.port=8888' -Dspring-boot.run.arguments='http://localhost:8123/' -pl generateurgrille
 mvn spring-boot:run -Dspring-boot.run.jvmArguments='-Dserver.port=9999' -Dspring-boot.run.arguments='http://localhost:8123/' -pl generateurgrille
 
-################################################# avec docker #################################################
+##################################################### avec docker ######################################################
 #construire les images docker 
 docker build -t gg:annuaire annuaire
 docker build -t gg:words words-service
@@ -53,8 +54,8 @@ docker logs ws1
 docker logs ws2
 docker logs gg1
 
-################################################# avec docker-compose #################################################
-###################################### les images sont construites comme avant ########################################
+################################################# avec docker-compose ##################################################
+###################################### les images sont construites comme avant #########################################
 docker-compose up --scale ws=3 --scale gg=2
 #ordre aléatoire
 docker exec exempleannuairemotsmeles-ws-2 bash -c "kill $(pidof java)"
@@ -62,12 +63,12 @@ docker exec exempleannuairemotsmeles-ws-1 bash -c "kill $(pidof java)"
 docker exec exempleannuairemotsmeles-ws-3 bash -c "kill $(pidof java)"
 docker-compose stop 
 
-################################################## pour la page web ##################################################
+################################################### pour la page web ###################################################
 cd front
 npm install
 node server.js
 
-############################################ pour la page web dans docker ############################################
+############################################# pour la page web dans docker #############################################
 #depuis la racine du projet
 docker build -t gg:front front
 docker create --name front80 -p 80:80  -e URL_GENERATEUR="http://localhost:8888"  gg:front
@@ -77,6 +78,23 @@ docker start front80
 cd front
 docker-compose  -f docker-compose-withui.yml up
 # l'accès se fait sur http://localhost dans les deux cas
+
+
+
+####################################################### IT CASE ########################################################
+##################################################### PARTIE DOKER #####################################################
+docker network create --subnet=172.42.0.0/16 netITCase
+docker build -t gg:words words-service
+docker build -t gg:gg generateurgrille
+docker create --net netITCase --ip 172.42.0.243 --name ws-ip-172.42.0.243 -p 8180:8180  -e IP_ANNUAIRE="http://host.docker.internal:8024/"  -e PORT=8180 gg:words
+docker create --net netITCase --ip 172.42.0.245 --name gg-ip-172.42.0.245 -p 8280:8280  -e IP_ANNUAIRE="http://host.docker.internal:8024/"  -e PORT=8280 gg:gg
+docker create --net netITCase --ip 172.42.0.233 --name ws-ip-172.42.0.233 -p 8181:8181  -e IP_ANNUAIRE="http://host.docker.internal:8025/"  -e PORT=8181 gg:words
+docker create --net netITCase --ip 172.42.0.235 --name gg-ip-172.42.0.235 -p 8281:8281  -e IP_ANNUAIRE="http://host.docker.internal:8025/"  -e PORT=8281 gg:gg
+################################################### LANCEMENT DES IT ###################################################
+mvn failsafe:integration-test failsafe:verify  -pl annuaire
+## /!\ attention, ip importante, choisir celle du test ou modifier dans le fichier .json /!\ 
+## /!\ contrat envoyé avec des versions selon l'OS, fichier en double dans les ressources, par défaut pour windows /!\ 
+
 
 ```
 
@@ -97,14 +115,21 @@ docker-compose  -f docker-compose-withui.yml up
   - pour l'utilisation de docker avec host.docker.internal il faut l'option "--add-host=host.docker.internal:host-gateway" car c'est sur linux
   - il y a des commandes exécutées dans un des containers docker pour simuler l'arrêt d'un service
   - le pipeline s'arrête car les containers docker sont lancés en tâche de fond (les stops ne sont pas nécessaires)
+  - le commit 253fe609d6c813204ff52112d48c3c866ffe24ad permet de ne plus avoir un "magical number" pour un numéro de processus java 
 - tag dockercompose : il y a un docker compose qui permet de tout lancer d'un coup
   - le compose est lancé (pas en fond), il bloque,
   - mais un script est lancé en tâche de fond, qui fait un "sleep" puis qui arrête le compose
   - l'ordre pour "tuer" les words-services est complétement arbitraire 
   - les docker-compose up ou stop fonctionne avec le fichier yml qui est là où la commande est lancée
+  - le commit 253fe609d6c813204ff52112d48c3c866ffe24ad permet de ne plus avoir un "magical number" pour un numéro de processus java
 - tag ui : il y a une page web (hébergée sur un serveur node) qui demande à un générateur de grille une grille pour l'afficher
   - il y a un docker dans ./front et un docker-compose spécifique
   - la page est accessible par un binding de port sur localhost de la machine hôte (sinon, il faut des configurations réseaux complexes...)
+- tag IT : il y a des tests d'intégration.
+  - docker est piloté depuis le test avec des commandes systèmes : Runtime.getRuntime().exec()
+  - pour lancer les ITCase, il faut bien ajouter failsafe:verify, sinon une erreur dans les tests fara tout de même un "BUILD SUCCESS"
+  - c'est découpé en deux avec des ports et des adresses différentes pour ne pas avoir les problèmes de libération de port différée
+
 
 ## Annuaire en composant 
 

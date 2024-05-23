@@ -57,7 +57,9 @@ public class ServiceEnregistrementImpl implements ServiceEnregistrement {
             if (ajout) urls.add(url);
         });
 
-        return urls.toArray(new String[urls.size()]);
+
+        String [] resultat = urls.toArray(new String[urls.size()]);
+        return resultat;
     }
 
     @Override
