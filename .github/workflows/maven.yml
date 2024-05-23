@@ -26,7 +26,7 @@ jobs:
           ${{ runner.os }}-maven-
     - name: Build with Maven
       run: |
-        cp annuaire/src/test/resources/json-github/*.json annuaire/src/test/resources/.        
+        cp annuaire/src/test/resources/json-github/*.json annuaire/src/test/resources/.
         mvn clean install -DskipTests
     - name: Test with Maven
       run: mvn test
